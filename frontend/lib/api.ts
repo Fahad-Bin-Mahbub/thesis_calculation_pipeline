@@ -1,6 +1,7 @@
 import type { AnalysisResponse, BootstrapTemplateResponse, ThemeCodebookItem } from "../types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const RAW_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE_URL = RAW_API_BASE_URL.replace(/\/+$/, "");
 
 export async function analyzeBundle(formData: FormData): Promise<AnalysisResponse> {
   const response = await fetch(`${API_BASE_URL}/api/analyze`, {
