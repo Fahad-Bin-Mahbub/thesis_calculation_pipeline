@@ -1,0 +1,27 @@
+[
+  {
+    "theme_id": "TH01_interface_complexity",
+    "label": "Interface Complexity & Cognitive Load",
+    "description": "Users felt overwhelmed by layout density, too many options, or high cognitive burden."
+  },
+  {
+    "theme_id": "TH02_authentication_setup",
+    "label": "Authentication & Setup Barriers",
+    "description": "Users struggled with account creation, authentication, onboarding, or configuration."
+  },
+  {
+    "theme_id": "TH03_encryption_transparency",
+    "label": "Encryption Transparency & Understanding",
+    "description": "Users were unsure when encryption was active or what security options meant."
+  },
+  {
+    "theme_id": "TH04_trust_security",
+    "label": "Trust & Security Perception",
+    "description": "Users described trust, reassurance, privacy, or concern about service-level security."
+  },
+  {
+    "theme_id": "TH05_learning_curve",
+    "label": "Learning Curve & Adoption Challenges",
+    "description": "Users discussed difficulty of learning, long-term adoption, or effort required to become proficient."
+  }
+]

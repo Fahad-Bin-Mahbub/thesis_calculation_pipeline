@@ -1,0 +1,114 @@
+[
+  {
+    "code_id": "CD01_navigation_discoverability",
+    "label": "Navigation & Feature Discoverability",
+    "description": "Difficulty locating settings, encryption controls, or key features.",
+    "suggested_theme_id": "TH01_interface_complexity",
+    "keywords": ["find", "locate", "where", "dashboard", "settings", "option", "menu", "navigate", "navigation"]
+  },
+  {
+    "code_id": "CD02_visual_overload",
+    "label": "Visual Overload & Too Many Options",
+    "description": "Interface felt crowded, overwhelming, or cognitively heavy.",
+    "suggested_theme_id": "TH01_interface_complexity",
+    "keywords": ["overwhelming", "too many", "feature rich", "cluttered", "layout", "complex", "confusing ui"]
+  },
+  {
+    "code_id": "CD03_signup_onboarding_friction",
+    "label": "Signup / Onboarding Friction",
+    "description": "Account creation or initial onboarding felt lengthy or hard.",
+    "suggested_theme_id": "TH02_authentication_setup",
+    "keywords": ["account setup", "signup", "sign up", "onboarding", "lengthy", "long process", "stuck", "create account"]
+  },
+  {
+    "code_id": "CD04_authenticator_2fa_dependency",
+    "label": "Authenticator / 2FA Dependency",
+    "description": "Participants struggled with authenticator app and two-factor setup.",
+    "suggested_theme_id": "TH02_authentication_setup",
+    "keywords": ["authenticator", "2fa", "two factor", "qr code", "verification app", "otp app"]
+  },
+  {
+    "code_id": "CD05_key_management_clarity",
+    "label": "Encryption Key Management Clarity",
+    "description": "Confusion around key generation, export, sharing, or regeneration.",
+    "suggested_theme_id": "TH02_authentication_setup",
+    "keywords": ["encryption key", "public key", "key export", "fingerprint", "key regenerate", "share key", "key management"]
+  },
+  {
+    "code_id": "CD06_encryption_state_visibility",
+    "label": "Encryption State Visibility",
+    "description": "Uncertainty about whether a message was actually encrypted.",
+    "suggested_theme_id": "TH03_encryption_transparency",
+    "keywords": ["encrypted or not", "lock", "clear indication", "securely", "encryption status", "is it encrypted", "indicator"]
+  },
+  {
+    "code_id": "CD07_internal_external_encryption_logic",
+    "label": "Internal vs External Encryption Logic",
+    "description": "Confusion between same-service and cross-service encryption behavior.",
+    "suggested_theme_id": "TH03_encryption_transparency",
+    "keywords": ["non proton", "external recipient", "secure contact", "internal encryption", "proton user", "gmail user"]
+  },
+  {
+    "code_id": "CD08_security_option_understanding",
+    "label": "Security Options Understanding",
+    "description": "Difficulty understanding extra controls such as password/expiration/sign.",
+    "suggested_theme_id": "TH03_encryption_transparency",
+    "keywords": ["password protection", "expiration", "passphrase", "sign", "additional security", "pgp", "s mime"]
+  },
+  {
+    "code_id": "CD09_technical_jargon_barrier",
+    "label": "Technical Terminology Barrier",
+    "description": "PGP, S/MIME, and related terminology blocked comprehension.",
+    "suggested_theme_id": "TH03_encryption_transparency",
+    "keywords": ["pgp", "s mime", "technical term", "jargon", "didn't know words", "dont know terms"]
+  },
+  {
+    "code_id": "CD10_trust_third_party_access",
+    "label": "Trust in Provider / Third-Party Access",
+    "description": "Trust concerns related to provider reputation or account access scope.",
+    "suggested_theme_id": "TH04_trust_security",
+    "keywords": ["trust", "trustworthy", "secure", "full access", "data", "third party", "privacy", "worry"]
+  },
+  {
+    "code_id": "CD11_password_reassurance",
+    "label": "Password-Based Psychological Reassurance",
+    "description": "Password or lock cues increased perceived security confidence.",
+    "suggested_theme_id": "TH04_trust_security",
+    "keywords": ["password", "made me feel secure", "lock sign", "reassuring", "psychologically"]
+  },
+  {
+    "code_id": "CD12_learning_curve_effort",
+    "label": "Learning Curve & Effort",
+    "description": "Tool adoption perceived as steep, time-consuming, or effortful.",
+    "suggested_theme_id": "TH05_learning_curve",
+    "keywords": ["learning curve", "steep", "need time", "time to learn", "hard to learn", "effort"]
+  },
+  {
+    "code_id": "CD13_need_guidance_visual_help",
+    "label": "Need for Guidance / Visual Aids",
+    "description": "Participants requested tutorials, walkthroughs, and visual explanation.",
+    "suggested_theme_id": "TH05_learning_curve",
+    "keywords": ["guided tour", "visual cues", "explanation", "tutorial", "step by step", "instructions", "help"]
+  },
+  {
+    "code_id": "CD14_thread_folder_management",
+    "label": "Thread & Folder Management Clarity",
+    "description": "Issues with message threading, folder behavior, and encrypted-mail organization.",
+    "suggested_theme_id": "TH01_interface_complexity",
+    "keywords": ["thread", "folder", "inbox", "reply hierarchy", "delete option", "encrypted folder"]
+  },
+  {
+    "code_id": "CD15_ui_aesthetic_feedback",
+    "label": "UI Aesthetic Feedback",
+    "description": "Feedback about color, logo, and visual polish influenced perceived usability.",
+    "suggested_theme_id": "TH01_interface_complexity",
+    "keywords": ["color", "logo", "ui", "interface look", "design", "visual"]
+  },
+  {
+    "code_id": "CD16_adoption_context_dependency",
+    "label": "Adoption Depends on Context",
+    "description": "Willingness to use encryption depended on sensitivity and professional need.",
+    "suggested_theme_id": "TH05_learning_curve",
+    "keywords": ["confidential", "sensitive", "professional", "regular use", "not needed right now", "context"]
+  }
+]

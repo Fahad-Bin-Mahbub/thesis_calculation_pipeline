@@ -1,0 +1,4 @@
+participant_name,tool,task,subtask,status
+Sample Participant,protonmail,task1,a,pass
+Sample Participant,protonmail,task1,b,partial
+Sample Participant,protonmail,task1,c,failed
