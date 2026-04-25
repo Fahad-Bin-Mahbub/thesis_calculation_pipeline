@@ -7,27 +7,48 @@ import pandas as pd
 from .common import add_key, apply_row_exclusions, load_excel
 
 
+# NASA-TLX column blocks: (start_col_idx, end_col_idx) — 4 items each.
+# Items: mental demand, success (inverted), effort, frustration.
 PM_NASA_BLOCKS = {
     "task1": (3, 6),
-    "task2": (17, 20),
-    "task3": (31, 34),
+    "task2": (13, 16),
+    "task3": (23, 26),
 }
 SME_NASA_BLOCKS = {
-    "task1": (45, 48),
-    "task2": (59, 62),
-    "task3": (73, 76),
+    "task1": (33, 36),
+    "task2": (43, 46),
+    "task3": (53, 56),
 }
 
-# tuples are (subtask_a_col, subtask_b_col, subtask_c_col, total_col)
-PM_TIME_BLOCKS = {
-    "task1": (13, 14, 15, 16),
-    "task2": (27, 28, 29, 30),
-    "task3": (41, 42, 43, 44),
+# Likert-scale column blocks: (start_col_idx, end_col_idx) — 3 items each.
+PM_LIKERT_BLOCKS = {
+    "task1": (7, 9),
+    "task2": (17, 19),
+    "task3": (27, 29),
 }
-SME_TIME_BLOCKS = {
-    "task1": (55, 56, 57, 58),
-    "task2": (69, 70, 71, 72),
-    "task3": (83, 84, 85, 86),
+SME_LIKERT_BLOCKS = {
+    "task1": (37, 39),
+    "task2": (47, 49),
+    "task3": (57, 59),
+}
+
+# Short labels for each Likert item within each task, in column order.
+LIKERT_LABELS = {
+    "task1": [
+        "Account setup straightforward",
+        "Key info clearly presented",
+        "Understand key handling",
+    ],
+    "task2": [
+        "See encryption before sending",
+        "Send to external straightforward",
+        "Confident sent securely",
+    ],
+    "task3": [
+        "Recognize encrypted messages",
+        "Opening encrypted intuitive",
+        "Confident ongoing encryption",
+    ],
 }
 
 TSR_TASK_ROWS: List[Tuple[str, str, str]] = [
@@ -42,6 +63,8 @@ TSR_TASK_ROWS: List[Tuple[str, str, str]] = [
     ("task3", "c", "Reply while maintaining encryption"),
 ]
 
+SHEET_NAME = "Form Responses 1"
+
 
 def _col(df: pd.DataFrame, idx: int) -> str:
     return df.columns[idx]
@@ -55,7 +78,14 @@ def _nasa_score(df: pd.DataFrame, start_idx: int, end_idx: int) -> float:
     return float(block.stack().mean() * 10)
 
 
-def _mean_time(df: pd.DataFrame, idx: int) -> float:
+def _likert_mean(df: pd.DataFrame, start_idx: int, end_idx: int) -> float:
+    """Mean Likert score across a contiguous block of columns."""
+    cols = [_col(df, idx) for idx in range(start_idx, end_idx + 1)]
+    return float(df[cols].apply(pd.to_numeric, errors="coerce").stack().mean())
+
+
+def _likert_item_mean(df: pd.DataFrame, idx: int) -> float:
+    """Mean Likert score for a single column."""
     return float(pd.to_numeric(df[_col(df, idx)], errors="coerce").mean())
 
 
@@ -81,70 +111,17 @@ def _status_weight(status: str) -> float:
 def _build_tool_metrics(
     df: pd.DataFrame,
     tool_slug: str,
-    time_blocks: Dict[str, Tuple[int, int, int, int]],
     nasa_blocks: Dict[str, Tuple[int, int]],
+    likert_blocks: Dict[str, Tuple[int, int]],
     keys: Dict[str, Any],
     registry: Dict[str, Dict[str, str]],
     source: str,
 ) -> Dict[str, Any]:
-    task_totals: List[pd.Series] = []
-    subtask_time_rows: List[Dict[str, Any]] = []
-    task_time_rows: List[Dict[str, Any]] = []
     task_nasa_rows: List[Dict[str, Any]] = []
+    task_likert_rows: List[Dict[str, Any]] = []
+    likert_item_rows: List[Dict[str, Any]] = []
 
-    for task_name, (a_idx, b_idx, c_idx, total_idx) in time_blocks.items():
-        for subtask, idx in zip(["a", "b", "c"], [a_idx, b_idx, c_idx]):
-            value = _mean_time(df, idx)
-            rounded = round(value, 2)
-            subtask_time_rows.append(
-                {
-                    "tool": tool_slug,
-                    "task": task_name,
-                    "subtask": subtask,
-                    "minutes": rounded,
-                }
-            )
-            add_key(
-                keys,
-                registry,
-                f"usability.{tool_slug}.{task_name}.subtask_{subtask}.time_mean_min",
-                rounded,
-                f"Mean completion time for {tool_slug} {task_name} subtask {subtask}",
-                source,
-                "usability",
-            )
-
-        total_series = pd.to_numeric(df[_col(df, total_idx)], errors="coerce")
-        task_totals.append(total_series)
-        task_mean = round(float(total_series.mean()), 2)
-        task_time_rows.append(
-            {
-                "tool": tool_slug,
-                "task": task_name,
-                "minutes": task_mean,
-            }
-        )
-        add_key(
-            keys,
-            registry,
-            f"usability.{tool_slug}.{task_name}.time_mean_min",
-            task_mean,
-            f"Mean total completion time for {tool_slug} {task_name}",
-            source,
-            "usability",
-        )
-
-    total_time = float(pd.concat(task_totals, axis=1).sum(axis=1).mean())
-    add_key(
-        keys,
-        registry,
-        f"usability.{tool_slug}.time_mean_min",
-        round(total_time, 2),
-        f"Overall mean completion time for {tool_slug}",
-        source,
-        "usability",
-    )
-
+    # --- NASA-TLX per task ---
     nasa_scores: List[float] = []
     for task_name, (start_idx, end_idx) in nasa_blocks.items():
         score = _nasa_score(df, start_idx, end_idx)
@@ -176,41 +153,71 @@ def _build_tool_metrics(
         "usability",
     )
 
+    # --- Likert per task ---
+    likert_task_means: List[float] = []
+    for task_name, (start_idx, end_idx) in likert_blocks.items():
+        task_mean = _likert_mean(df, start_idx, end_idx)
+        likert_task_means.append(task_mean)
+        task_likert_rows.append(
+            {
+                "tool": tool_slug,
+                "task": task_name,
+                "likert_mean": round(task_mean, 2),
+            }
+        )
+        add_key(
+            keys,
+            registry,
+            f"usability.{tool_slug}.{task_name}.likert_mean",
+            round(task_mean, 2),
+            f"Mean Likert agreement for {tool_slug} {task_name}",
+            source,
+            "usability",
+        )
+
+        # Per-item means within this task
+        labels = LIKERT_LABELS.get(task_name, [])
+        for offset, col_idx in enumerate(range(start_idx, end_idx + 1)):
+            item_mean = _likert_item_mean(df, col_idx)
+            label = labels[offset] if offset < len(labels) else f"item_{offset + 1}"
+            likert_item_rows.append(
+                {
+                    "tool": tool_slug,
+                    "task": task_name,
+                    "item_index": offset,
+                    "label": label,
+                    "mean": round(item_mean, 2),
+                }
+            )
+            add_key(
+                keys,
+                registry,
+                f"usability.{tool_slug}.{task_name}.likert_item_{offset}.mean",
+                round(item_mean, 2),
+                f"Likert mean for {tool_slug} {task_name}: {label}",
+                source,
+                "usability",
+            )
+
+    likert_overall = float(sum(likert_task_means) / len(likert_task_means))
+    add_key(
+        keys,
+        registry,
+        f"usability.{tool_slug}.likert_mean",
+        round(likert_overall, 2),
+        f"Overall mean Likert agreement for {tool_slug}",
+        source,
+        "usability",
+    )
+
     return {
         "tool": tool_slug,
-        "time_mean_min": round(total_time, 2),
         "nasa_tlx": round(nasa_mean, 2),
-        "task_time_rows": task_time_rows,
-        "subtask_time_rows": subtask_time_rows,
+        "likert_mean": round(likert_overall, 2),
         "task_nasa_rows": task_nasa_rows,
+        "task_likert_rows": task_likert_rows,
+        "likert_item_rows": likert_item_rows,
     }
-
-
-def _time_plot_rows(
-    df: pd.DataFrame,
-    time_blocks: Dict[str, Tuple[int, int, int, int]],
-    tool_slug: str,
-) -> List[Dict[str, Any]]:
-    participant_col = "Participant Name " if "Participant Name " in df.columns else None
-    rows: List[Dict[str, Any]] = []
-    for idx, row in df.iterrows():
-        participant = str(row[participant_col]).strip() if participant_col else f"row_{idx + 1}"
-        for task, (a_idx, b_idx, c_idx, _total_idx) in time_blocks.items():
-            for subtask, col_idx in zip(["a", "b", "c"], [a_idx, b_idx, c_idx]):
-                value = pd.to_numeric(row[_col(df, col_idx)], errors="coerce")
-                if pd.isna(value):
-                    continue
-                rows.append(
-                    {
-                        "tool": tool_slug,
-                        "participant": participant,
-                        "task": task,
-                        "subtask": subtask,
-                        "subtask_id": f"{task}.{subtask}",
-                        "minutes": round(float(value), 2),
-                    }
-                )
-    return rows
 
 
 def _tsr_from_task_outcomes(
@@ -307,7 +314,7 @@ def _tsr_from_task_outcomes(
 
 
 def bootstrap_task_template(path: str) -> List[Dict[str, Any]]:
-    df = load_excel(path, sheet_name="all data ")
+    df = load_excel(path, sheet_name=SHEET_NAME)
     if "Participant Name " in df.columns:
         names = [str(value).strip() for value in df["Participant Name "].dropna().tolist() if str(value).strip()]
     else:
@@ -336,7 +343,7 @@ def analyze_usability(
     task_outcomes_path: str | None = None,
 ) -> Dict[str, Any]:
     config = config or {}
-    df = load_excel(path, sheet_name="all data ")
+    df = load_excel(path, sheet_name=SHEET_NAME)
     warnings: List[str] = []
     keys: Dict[str, Any] = {}
     registry: Dict[str, Dict[str, str]] = {}
@@ -357,8 +364,12 @@ def analyze_usability(
         "usability",
     )
 
-    pm_metrics = _build_tool_metrics(df, "protonmail", PM_TIME_BLOCKS, PM_NASA_BLOCKS, keys, registry, source)
-    sme_metrics = _build_tool_metrics(df, "securemyemail", SME_TIME_BLOCKS, SME_NASA_BLOCKS, keys, registry, source)
+    pm_metrics = _build_tool_metrics(
+        df, "protonmail", PM_NASA_BLOCKS, PM_LIKERT_BLOCKS, keys, registry, source
+    )
+    sme_metrics = _build_tool_metrics(
+        df, "securemyemail", SME_NASA_BLOCKS, SME_LIKERT_BLOCKS, keys, registry, source
+    )
 
     tsr_result: Optional[Dict[str, Any]] = None
     if task_outcomes_path:
@@ -368,9 +379,9 @@ def analyze_usability(
 
     table5_rows = [
         {
-            "metric": "Time (min)",
-            "protonmail": pm_metrics["time_mean_min"],
-            "securemyemail": sme_metrics["time_mean_min"],
+            "metric": "Likert Mean",
+            "protonmail": pm_metrics["likert_mean"],
+            "securemyemail": sme_metrics["likert_mean"],
         },
         {
             "metric": "Task Success Rate (%)",
@@ -387,15 +398,15 @@ def analyze_usability(
     tables["usability_preview"] = df.head(10).fillna("").to_dict(orient="records")
     tables["paper_table_5"] = table5_rows
     tables["paper_table_6"] = tsr_result["table6_rows"] if tsr_result else []
-    tables["usability_subtask_times"] = pm_metrics["subtask_time_rows"] + sme_metrics["subtask_time_rows"]
-    tables["usability_task_times"] = pm_metrics["task_time_rows"] + sme_metrics["task_time_rows"]
     tables["usability_task_nasa"] = pm_metrics["task_nasa_rows"] + sme_metrics["task_nasa_rows"]
-    tables["usability_time_plot"] = _time_plot_rows(df, PM_TIME_BLOCKS, "protonmail") + _time_plot_rows(df, SME_TIME_BLOCKS, "securemyemail")
+    tables["usability_task_likert"] = pm_metrics["task_likert_rows"] + sme_metrics["task_likert_rows"]
+    tables["usability_likert_items"] = pm_metrics["likert_item_rows"] + sme_metrics["likert_item_rows"]
     tables["paper_section_6"] = {
         "table_5": table5_rows,
         "table_6": tsr_result["table6_rows"] if tsr_result else [],
-        "subtask_time_rows": pm_metrics["subtask_time_rows"] + sme_metrics["subtask_time_rows"],
         "task_nasa_rows": pm_metrics["task_nasa_rows"] + sme_metrics["task_nasa_rows"],
+        "task_likert_rows": pm_metrics["task_likert_rows"] + sme_metrics["task_likert_rows"],
+        "likert_item_rows": pm_metrics["likert_item_rows"] + sme_metrics["likert_item_rows"],
     }
 
     return {

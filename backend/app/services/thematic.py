@@ -10,33 +10,33 @@ from .common import add_key, load_excel, load_json_file
 
 
 PROMPT_MAP = {
-    2: ("protonmail", "task1", "Q1_thinking"),
-    3: ("protonmail", "task1", "Q2_confusion"),
-    4: ("protonmail", "task1", "Q3_improve"),
-    5: ("protonmail", "task2", "Q1_thinking"),
-    6: ("protonmail", "task2", "Q2_confusion"),
-    7: ("protonmail", "task2", "Q3_improve"),
-    8: ("protonmail", "task3", "Q1_thinking"),
-    9: ("protonmail", "task3", "Q2_confusion"),
-    10: ("protonmail", "task3", "Q3_improve"),
-    11: ("securemyemail", "task1", "Q1_thinking"),
-    12: ("securemyemail", "task1", "Q2_confusion"),
-    13: ("securemyemail", "task1", "Q3_improve"),
-    14: ("securemyemail", "task2", "Q1_thinking"),
-    15: ("securemyemail", "task2", "Q2_confusion"),
-    16: ("securemyemail", "task2", "Q3_improve"),
-    17: ("securemyemail", "task3", "Q1_thinking"),
-    18: ("securemyemail", "task3", "Q2_confusion"),
-    19: ("securemyemail", "task3", "Q3_improve"),
-    20: ("overall", "interview", "Q1_easier_tool"),
-    21: ("overall", "interview", "Q2_trust"),
-    22: ("overall", "interview", "Q3_frustration"),
-    23: ("overall", "interview", "Q4_barrier"),
-    24: ("overall", "interview", "Q5_learning_curve"),
-    25: ("overall", "interview", "Q6_improvement"),
-    26: ("overall", "interview", "Q7_recommend"),
-    27: ("overall", "interview", "Q8_contexts"),
-    28: ("overall", "interview", "Q9_final_feedback"),
+    10: ("protonmail", "task1", "Q1_thinking"),
+    11: ("protonmail", "task1", "Q2_confusion"),
+    12: ("protonmail", "task1", "Q3_improve"),
+    20: ("protonmail", "task2", "Q1_thinking"),
+    21: ("protonmail", "task2", "Q2_confusion"),
+    22: ("protonmail", "task2", "Q3_improve"),
+    30: ("protonmail", "task3", "Q1_thinking"),
+    31: ("protonmail", "task3", "Q2_confusion"),
+    32: ("protonmail", "task3", "Q3_improve"),
+    40: ("securemyemail", "task1", "Q1_thinking"),
+    41: ("securemyemail", "task1", "Q2_confusion"),
+    42: ("securemyemail", "task1", "Q3_improve"),
+    50: ("securemyemail", "task2", "Q1_thinking"),
+    51: ("securemyemail", "task2", "Q2_confusion"),
+    52: ("securemyemail", "task2", "Q3_improve"),
+    60: ("securemyemail", "task3", "Q1_thinking"),
+    61: ("securemyemail", "task3", "Q2_confusion"),
+    62: ("securemyemail", "task3", "Q3_improve"),
+    63: ("overall", "interview", "Q1_easier_tool"),
+    64: ("overall", "interview", "Q2_trust"),
+    65: ("overall", "interview", "Q3_frustration"),
+    66: ("overall", "interview", "Q4_barrier"),
+    67: ("overall", "interview", "Q5_learning_curve"),
+    68: ("overall", "interview", "Q6_improvement"),
+    69: ("overall", "interview", "Q7_recommend"),
+    70: ("overall", "interview", "Q8_contexts"),
+    71: ("overall", "interview", "Q9_final_feedback"),
 }
 
 STOPWORDS: Set[str] = {
@@ -272,7 +272,7 @@ def _candidate_label(candidate_key: str) -> str:
 
 
 def extract_excerpts(path: str) -> List[Dict[str, Any]]:
-    df = load_excel(path, sheet_name="thematic")
+    df = load_excel(path, sheet_name="Form Responses 1")
     if "Participant Name " in df.columns:
         df = df.loc[df["Participant Name "].notna()].copy()
 
@@ -280,12 +280,13 @@ def extract_excerpts(path: str) -> List[Dict[str, Any]]:
     for _, row in df.iterrows():
         participant_name = str(row.get("Participant Name ", "")).strip()
         excel_row = int(row["_excel_row"])
-        for idx, column_name in enumerate(df.columns[2:29], start=2):
+        for col_idx in sorted(PROMPT_MAP.keys()):
+            column_name = df.columns[col_idx]
             value = row[column_name]
             text = "" if pd.isna(value) else str(value).strip()
             if not text:
                 continue
-            tool, task, prompt_id = PROMPT_MAP[idx]
+            tool, task, prompt_id = PROMPT_MAP[col_idx]
             excerpt_id = f"{tool[:2].upper()}_{task.upper()}_{prompt_id}_R{excel_row:03d}"
             records.append(
                 {

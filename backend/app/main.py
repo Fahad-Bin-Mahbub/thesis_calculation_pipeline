@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import json
 import tempfile
+import traceback
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, File, Form, UploadFile
+from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from .models import AnalysisResponse, BootstrapTemplateResponse
 from .services.common import load_json_file, load_optional_json
@@ -20,10 +22,31 @@ app = FastAPI(title="Email Encryption Study Analysis API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Ensure CORS headers are present even on unhandled 500 errors.
+
+    Without this, uvicorn's default 500 response bypasses the CORS
+    middleware, causing the browser to report a CORS policy violation
+    instead of the actual server error.
+    """
+    traceback.print_exc()
+    origin = request.headers.get("origin", "*")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)},
+        headers={
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
+        },
+    )
 
 
 def _save_upload(temp_dir: Path, upload: UploadFile) -> str:
